@@ -3,6 +3,7 @@ from flask import request
 from WindPy import *
 import json
 
+
 app = Flask(__name__)
 
 
@@ -131,6 +132,15 @@ def getOptions(query_str):
     if status_dict is None:
         return val_to_return(False, None)
     return val_to_return(True, status_dict)
+
+@app.route('/doTrade',methods=['POST'])
+def doTrade():
+    param_dict = request.form
+    #TODO 参数设定
+    #TODO 使用Wind代码生成器，生成代码，进行交易
+
+    return
+
 
 if __name__ == '__main__':
     app.run()
