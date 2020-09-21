@@ -224,12 +224,12 @@ def tquery():
 
 
 #交易撤销委托函数
-@app.route('/Trade/tcancel',methods=['POST'])
+@app.route('/trade/tcancel',methods=['POST'])
 def tcancel():
     param_dict = request.form
     OrderNumber = param_dict.get('OrderNumber',None)
     MarketType = param_dict.get('MarketType',None)
-    MarketType = param_dict.get('LogonID',None)
+    LogonID = param_dict.get('LogonID',None)
 
     if not (OrderNumber):
         return val_to_return(False, prompt + ": info not valid")
@@ -255,7 +255,7 @@ def tcancel():
 
 
 #交易情况查询函数
-@app.route('/Trade/tquery',methods=['POST'])
+@app.route('/trade/tquery',methods=['POST'])
 def tquery():
     param_dict = request.form
     queryType = param_dict.get('queryType',None)
