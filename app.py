@@ -204,12 +204,6 @@ def trade_order():
     else:
         return val_to_return(False, OrderStatus.Data[8])
 
-
-
-
-
-
-
 #交易情况查询函数
 @app.route('/Trade/tquery',methods=['POST'])
 def tquery():
