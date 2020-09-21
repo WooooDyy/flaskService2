@@ -210,35 +210,71 @@ def trade_order():
 
 
 
-#交易情况查询函数
-@app.route('/Trade/tquery',methods=['POST'])
-def tquery():
-    param_dict = request.form
-    queryType = param_dict.get('queryType')
-    LogonID = param_dict.get('LogonID')
-    RequestID = param_dict.get('LogonID')
-    OrderNumber = param_dict.get('OrderNumber')
-    MarketType = param_dict.get('MarketType')
-    OrderType = param_dict.get('OrderType')
-    WindCode = param_dict.get('WindCode')
-
-    # TODO wind
-
-    return val_to_return(True,None)
 
 
 #交易撤销委托函数
 @app.route('/Trade/tcancel',methods=['POST'])
 def tcancel():
     param_dict = request.form
-    OrderNumber = param_dict.get('OrderNumber')
-    MarketType = param_dict.get('MarketType')
-    MarketType = param_dict.get('LogonID')
+    OrderNumber = param_dict.get('OrderNumber',None)
+    # MarketType = param_dict.get('MarketType')
+    # MarketType = param_dict.get('LogonID')
 
-    #TODO wind
+    if not (OrderNumber):
+        return val_to_return(False, prompt + ": info not valid")
+
+    options = param_dict.get('options', default={})
+    options_list = []
+    options_str = ''
+    for option_key in options.keys():
+        options_list.append(option_key+'='+options.get(option_key))
+    options_str = ';'.join(options_list)
+
+    if options=='':
+        OrderStatus = w.query(OrderNumber=OrderNumber,options=None)
+    else:
+        OrderStatus = w.query(OrderNumber=OrderNumber, options=options_str)
+
+    if OrderStatus.ErrorCode == 0:
+        return val_to_return(True, OrderStatus.Data)
+    else:
+        return val_to_return(False, OrderStatus.Data[3])
+
 
     return val_to_return(True,None)
 
+
+#交易情况查询函数
+@app.route('/Trade/tquery',methods=['POST'])
+def tquery():
+    param_dict = request.form
+    queryType = param_dict.get('queryType',None)
+    # LogonID = param_dict.get('LogonID')
+    # RequestID = param_dict.get('LogonID')
+    # OrderNumber = param_dict.get('OrderNumber')
+    # MarketType = param_dict.get('MarketType')
+    # OrderType = param_dict.get('OrderType')
+    # WindCode = param_dict.get('WindCode')
+
+    if not (queryType):
+        return val_to_return(False, prompt + ": info not valid")
+
+    options = param_dict.get('options', default={})
+    options_list = []
+    options_str = ''
+    for option_key in options.keys():
+        options_list.append(option_key+'='+options.get(option_key))
+    options_str = ';'.join(options_list)
+
+    if options=='':
+        OrderStatus = w.query(queryType=queryType,options=None)
+    else:
+        OrderStatus = w.query(queryType=queryType, options=options_str)
+
+    if OrderStatus.ErrorCode == 0:
+        return val_to_return(True, OrderStatus.Data)
+    else:
+        return val_to_return(False,None)#没看到错误msg在哪里
 
 
 
