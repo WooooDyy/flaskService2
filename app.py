@@ -197,7 +197,7 @@ def trade_order():
                  OrderPrice=orderVolume, OrderVolume=orderVolume)
     else:
         OrderStatus = w.torder(SecurityCode=securityCode, TradeSide=tradeSide,
-                 OrderPrice=orderVolume, OrderVolume=orderVolume, options=options)
+                 OrderPrice=orderVolume, OrderVolume=orderVolume, options=options_str)
 
     if OrderStatus.ErrorCode == 0:
         return val_to_return(True, OrderStatus.Data)
