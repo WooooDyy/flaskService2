@@ -5,7 +5,7 @@ import json
 
 
 app = Flask(__name__)
-
+prompt = 'API_group'
 
 def get_info_data_from_wind(test_resource):
     test_data = test_resource.Data
@@ -32,7 +32,6 @@ def get_info_data_from_wind(test_resource):
         res_data.append(dict)
 
     return res_data
-
 
 def get_status_data_from_wind(test_resource):
     test_data = test_resource.Data
@@ -77,7 +76,6 @@ def get_info(date_str, us_code):
         'query_info': info_res,
         'query_list': query_list
     }
-
 
 def get_status(query_str):
     status_res = w.wsq(query_str, "rt_bid1,rt_bid2,rt_conv_price,rt_last,rt_ustock_price,rt_delta")
@@ -140,6 +138,73 @@ def doTrade():
     #TODO 使用Wind代码生成器，生成代码，进行交易
 
     return
+
+# Author: zjy
+# 登录接口
+@app.route('/trade/tlogon', methods=['POST'])
+def trade_logon():
+    param_dict = request.form
+    brokerId = param_dict.get('brokerId', default=None)
+    departmentId = param_dict.get('departmentId', default=None)
+    logonAccount = param_dict.get('logonAccount', default=None)
+    password = param_dict.get('password', default=None)
+    accountType = param_dict.get('accountType', default=None)
+
+    if brokerId is None or departmentId is None or logonAccount is None or password is None:
+        return val_to_return(False, prompt + ": info not valid")
+
+    # 登录交易账号
+    LogonID = w.tlogon(brokerId, departmentId, logonAccount, password, accountType)
+
+    if LogonID.ErrorCode == 0:
+        return val_to_return(True, LogonID.Data[0])
+    else:
+        return val_to_return(False, LogonID.Data[4])
+
+
+# 交易登出接口
+@app.route('/trade/tlogout', methods=['POST'])
+def trade_logout():
+    param_dict = request.form
+    logonId = param_dict.get('logonId', default=0)
+    Logout = w.tlogout(LogonID=logonId)
+    if Logout.ErrorCode == 0:
+        return val_to_return(True, prompt + ': logout succeed')
+    else:
+        return val_to_return(False, Logout.Data[2])
+
+# 交易委托下单接口
+@app.route('/trade/torder', methods=['POST'])
+def trade_order():
+    param_dict = request.form
+    securityCode = param_dict.get('securityCode', None)
+    tradeSide = param_dict.get('tradeSide', None)
+    orderPrice = param_dict.get('orderPrice', None)
+    orderVolume = param_dict.get('orderVolume', None)
+
+    if not (securityCode and tradeSide and orderPrice and orderVolume):
+        return val_to_return(False, prompt + ": info not valid")
+
+    options = param_dict.get('options', default={})
+    options_list = []
+    options_str = ''
+    for option_key in options.keys():
+        options_list.append(option_key+'='+options.get(option_key))
+    options_str = ';'.join(options_list)
+
+    if options == '':
+        OrderStatus = w.torder(SecurityCode=securityCode, TradeSide=tradeSide,
+                 OrderPrice=orderVolume, OrderVolume=orderVolume)
+    else:
+        OrderStatus = w.torder(SecurityCode=securityCode, TradeSide=tradeSide,
+                 OrderPrice=orderVolume, OrderVolume=orderVolume, options=options)
+
+    if OrderStatus.ErrorCode == 0:
+        return val_to_return(True, OrderStatus.Data)
+    else:
+        return val_to_return(False, OrderStatus.Data[8])
+
+
 
 
 
