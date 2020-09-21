@@ -1,4 +1,32 @@
+# 数据获取部分
+
+## login
+
+- api:/loginWind,GET
+- 开启wind
+
+## logout
+
+- api:/logoutWind,GET
+
+- 关闭wind
+
+## getList
+
+- api：`/getList/<string:us_code>/<string:date>`,GET
+- 获取列表
+
+## getOptions
+
+- api:`/getOptions/<string:query_str>`，GET
+- 获取某个期权的参数
+
+
+
+# 交易部分
+
 ## logon
+
 - api: /trade/tlogon, POST
 - accountType可选
 - content:
@@ -94,3 +122,4 @@
   ```
 
   
+
