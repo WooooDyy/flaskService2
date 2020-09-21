@@ -144,12 +144,13 @@ def doTrade():
 # 登录接口
 @app.route('/trade/tlogon', methods=['POST'])
 def trade_logon():
-    param_dict = request.form
-    brokerId = param_dict.get('brokerId', default=None)
-    departmentId = param_dict.get('departmentId', default=None)
-    logonAccount = param_dict.get('logonAccount', default=None)
-    password = param_dict.get('password', default=None)
-    accountType = param_dict.get('accountType', default=None)
+    param_dict = json.loads(request.get_data(as_text=True))
+
+    brokerId = param_dict.get('brokerId', None)
+    departmentId = param_dict.get('departmentId', None)
+    logonAccount = param_dict.get('logonAccount', None)
+    password = param_dict.get('password', None)
+    accountType = param_dict.get('accountType', {})
 
     if brokerId is None or departmentId is None or logonAccount is None or password is None:
         return val_to_return(False, prompt + ": info not valid")
@@ -166,8 +167,8 @@ def trade_logon():
 # 交易登出接口
 @app.route('/trade/tlogout', methods=['POST'])
 def trade_logout():
-    param_dict = request.form
-    logonId = param_dict.get('logonId', default=0)
+    param_dict = json.loads(request.get_data(as_text=True))
+    logonId = param_dict.get('logonId', 0)
     Logout = w.tlogout(LogonID=logonId)
     if Logout.ErrorCode == 0:
         return val_to_return(True, prompt + ': logout succeed')
@@ -178,7 +179,7 @@ def trade_logout():
 # 交易委托下单接口
 @app.route('/trade/torder', methods=['POST'])
 def trade_order():
-    param_dict = request.form
+    param_dict = json.loads(request.get_data(as_text=True))
     securityCode = param_dict.get('securityCode', None)
     tradeSide = param_dict.get('tradeSide', None)
     orderPrice = param_dict.get('orderPrice', None)
@@ -187,7 +188,7 @@ def trade_order():
     if not (securityCode and tradeSide and orderPrice and orderVolume):
         return val_to_return(False, prompt + ": info not valid")
 
-    options = param_dict.get('options', default={})
+    options = param_dict.get('options', {})
     options_list = []
     options_str = ''
     for option_key in options.keys():
@@ -212,7 +213,7 @@ def trade_order():
 #交易撤销委托函数
 @app.route('/trade/tcancel',methods=['POST'])
 def tcancel():
-    param_dict = request.form
+    param_dict = json.loads(request.get_data(as_text=True))
     OrderNumber = param_dict.get('OrderNumber',None)
     MarketType = param_dict.get('MarketType',None)
     LogonID = param_dict.get('LogonID',None)
@@ -220,7 +221,7 @@ def tcancel():
     if not (OrderNumber):
         return val_to_return(False, prompt + ": info not valid")
 
-    options = param_dict.get('options', default={})
+    options = param_dict.get('options', {})
     options_list = []
     options_str = ''
     for option_key in options.keys():
@@ -243,7 +244,7 @@ def tcancel():
 #交易情况查询函数
 @app.route('/trade/tquery',methods=['POST'])
 def tquery():
-    param_dict = request.form
+    param_dict = json.loads(request.get_data(as_text=True))
     queryType = param_dict.get('queryType',None)
     LogonID = param_dict.get('LogonID',None)
     RequestID = param_dict.get('LogonID',None)
@@ -255,7 +256,7 @@ def tquery():
     if not (queryType):
         return val_to_return(False, prompt + ": info not valid")
 
-    options = param_dict.get('options', default={})
+    options = param_dict.get('options', {})
     options_list = []
     options_str = ''
     for option_key in options.keys():
