@@ -206,13 +206,23 @@ def trade_order():
     else:
         return val_to_return(False, OrderStatus.Data[8])
 
+#交易情况查询函数
+@app.route('/Trade/tquery',methods=['POST'])
+def tquery():
+    param_dict = request.form
+    queryType = param_dict.get('queryType')
+    LogonID = param_dict.get('LogonID')
+    RequestID = param_dict.get('LogonID')
+    OrderNumber = param_dict.get('OrderNumber')
+    MarketType = param_dict.get('MarketType')
+    OrderType = param_dict.get('OrderType')
+    WindCode = param_dict.get('WindCode')
+
+    # TODO wind
+
+    return val_to_return(True,None)
 
 
-
-
-
-
-#Author xzh
 #交易撤销委托函数
 @app.route('/Trade/tcancel',methods=['POST'])
 def tcancel():
