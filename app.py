@@ -81,7 +81,7 @@ def get_info(date_str, us_code):
 
 
 def get_status(query_str):
-    status_res = w.wsq(query_str, "rt_bid1,rt_bid2,rt_conv_price,rt_last,rt_ustock_price,rt_delta")
+    status_res = w.wsq(query_str, "rt_ask1,rt_ask2,rt_last_amt,rt_conv_price,rt_last,rt_ustock_price,rt_delta")
     if status_res.ErrorCode != 0:
         return None
     status_res = get_status_data_from_wind(status_res)
@@ -122,7 +122,10 @@ def logout():
 ## 510050.SH
 @app.route('/getList/<string:us_code>/<string:date>', methods=['GET'])
 def getList(date, us_code):
+    w.start()
+    print("getList")
     info_dict = get_info(date, us_code=us_code)  # 注意，不管什么问题，一定要返回，就算是返回None
+    w.stop()
     if info_dict is None:
         return val_to_return(False, None)
     return val_to_return(True, info_dict)
@@ -130,7 +133,9 @@ def getList(date, us_code):
 
 @app.route('/getOptions/<string:query_str>', methods=['GET'])
 def getOptions(query_str):
+    w.start()
     status_dict = get_status(query_str)
+    w.stop()
     if status_dict is None:
         return val_to_return(False, None)
     return val_to_return(True, status_dict)
@@ -201,17 +206,20 @@ def trade_order():
         options_list.append(option_key + '=' + options.get(option_key))
     options_str = ';'.join(options_list)
 
+    print(param_dict)
     if options == '':
         OrderStatus = w.torder(SecurityCode=securityCode, TradeSide=tradeSide,
-                               OrderPrice=orderVolume, OrderVolume=orderVolume)
+                               OrderPrice=orderPrice, OrderVolume=orderVolume)
     else:
         OrderStatus = w.torder(SecurityCode=securityCode, TradeSide=tradeSide,
-                               OrderPrice=orderVolume, OrderVolume=orderVolume, options=options_str)
+                               OrderPrice=orderPrice, OrderVolume=orderVolume, options=options_str)
 
     if OrderStatus.ErrorCode == 0:
-        return val_to_return(True, OrderStatus.Data)
+        # return val_to_return(True, OrderStatus.Data)
+        return val_to_return(True, param_dict)
     else:
-        return val_to_return(False, OrderStatus.Data[8])
+        # return val_to_return(False, OrderStatus.Data[8])
+        return val_to_return(False, param_dict)
 
 
 # 交易撤销委托函数
@@ -277,4 +285,5 @@ def tquery():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='127.0.0.1', port=5000, debug=True)
+    # w.start()
