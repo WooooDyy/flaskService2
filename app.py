@@ -33,7 +33,6 @@ def get_info_data_from_wind(test_resource):
 
     return res_data
 
-
 def get_status_data_from_wind(test_resource):
     test_data = test_resource.Data
     test_codes = test_resource.Codes
@@ -122,10 +121,10 @@ def logout():
 ## 510050.SH
 @app.route('/getList/<string:us_code>/<string:date>', methods=['GET'])
 def getList(date, us_code):
-    w.start()
+    if not w.isconnected():
+        w.start()
     print("getList")
     info_dict = get_info(date, us_code=us_code)  # 注意，不管什么问题，一定要返回，就算是返回None
-    w.stop()
     if info_dict is None:
         return val_to_return(False, None)
     return val_to_return(True, info_dict)
@@ -133,9 +132,9 @@ def getList(date, us_code):
 
 @app.route('/getOptions/<string:query_str>', methods=['GET'])
 def getOptions(query_str):
-    w.start()
+    if not w.isconnected():
+        w.start()
     status_dict = get_status(query_str)
-    w.stop()
     if status_dict is None:
         return val_to_return(False, None)
     return val_to_return(True, status_dict)
@@ -166,13 +165,14 @@ def trade_logon():
     if brokerId is None or departmentId is None or logonAccount is None or password is None:
         return val_to_return(False, prompt + ": info not valid")
 
+    if not w.isconnected():
+        w.start()
     # 登录交易账号
     LogonID = w.tlogon(brokerId, departmentId, logonAccount, password, accountType)
-
     if LogonID.ErrorCode == 0:
         return val_to_return(True, LogonID.Data[0])
     else:
-        return val_to_return(False, LogonID.Data)
+        return val_to_return(False, LogonID.ErrorCode)
 
 
 # 交易登出接口
@@ -180,12 +180,14 @@ def trade_logon():
 def trade_logout():
     param_dict = json.loads(request.get_data(as_text=True))
     logonId = param_dict.get('logonId', 0)
+    if not w.isconnected():
+        w.start()
     Logout = w.tlogout(LogonID=logonId)
     if Logout.ErrorCode == 0:
         return val_to_return(True, prompt + ': logout succeed')
     else:
-        return val_to_return(False, Logout.Data[2])
-
+        # return val_to_return(False, Logout.Data[2])
+        return val_to_return(True, put_data_field(Logout.Fields, Logout.Data))
 
 # 交易委托下单接口
 @app.route('/trade/torder', methods=['POST'])
@@ -207,6 +209,8 @@ def trade_order():
     options_str = ';'.join(options_list)
 
     print(param_dict)
+    if not w.isconnected():
+        w.start()
     if options == '':
         OrderStatus = w.torder(SecurityCode=securityCode, TradeSide=tradeSide,
                                OrderPrice=orderPrice, OrderVolume=orderVolume)
@@ -215,11 +219,11 @@ def trade_order():
                                OrderPrice=orderPrice, OrderVolume=orderVolume, options=options_str)
 
     if OrderStatus.ErrorCode == 0:
-        # return val_to_return(True, OrderStatus.Data)
-        return val_to_return(True, param_dict)
+        return val_to_return(True, put_data_field(OrderStatus.Fields, OrderStatus.Data))
+        # return val_to_return(True, param_dict)
     else:
         # return val_to_return(False, OrderStatus.Data[8])
-        return val_to_return(False, param_dict)
+        return val_to_return(False, OrderStatus.ErrorCode)
 
 
 # 交易撤销委托函数
@@ -239,14 +243,15 @@ def tcancel():
     for option_key in options.keys():
         options_list.append(option_key + '=' + options.get(option_key))
     options_str = ';'.join(options_list)
-
+    if not w.isconnected():
+        w.start()
     if options == '':
         OrderStatus = w.tcancel(OrderNumber=OrderNumber, options=None)
     else:
         OrderStatus = w.tcancel(OrderNumber=OrderNumber, options=options_str)
 
     if OrderStatus.ErrorCode == 0:
-        return val_to_return(True, OrderStatus.Data)
+        return val_to_return(True, put_data_field(OrderStatus.Fields, OrderStatus.Data))
     else:
         return val_to_return(False, OrderStatus.Data[3])
 
@@ -272,18 +277,37 @@ def tquery():
     for option_key in options.keys():
         options_list.append(option_key + '=' + options.get(option_key))
     options_str = ';'.join(options_list)
-
+    if not w.isconnected():
+        w.start()
     if options == '':
         OrderStatus = w.tquery(qrycode=queryType, options=None)
     else:
         OrderStatus = w.tquery(qrycode=queryType, options=options_str)
 
     if OrderStatus.ErrorCode == 0:
-        return val_to_return(True, OrderStatus.Data)
+        # return val_to_return(True, OrderStatus.Data)
+        out_dict = put_data_field(OrderStatus.Fields, OrderStatus.Data)
+        return val_to_return(True, out_dict)
     else:
-        return val_to_return(False, None)  # 没看到错误msg在哪里
+        return val_to_return(False, OrderStatus.ErrorCode)  # 没看到错误msg在哪里
 
+
+def put_data_field(fields, data):
+    res = []
+    if len(data) == 0 or len(data[0]) == 0:
+        return []
+
+    for i in range(len(data[0])):
+        this_dic = {}
+        for fid in range(len(fields)):
+            da = data[fid][i]
+            if type(da) == datetime:
+                da = da.strftime('%Y-%m-%d %H:%M:%S')
+            this_dic[fields[fid]] = da
+        res.append(this_dic)
+
+    return res
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
     # w.start()
