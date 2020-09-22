@@ -172,7 +172,7 @@ def trade_logon():
     if LogonID.ErrorCode == 0:
         return val_to_return(True, LogonID.Data[0])
     else:
-        return val_to_return(False, LogonID.Data[4])
+        return val_to_return(False, LogonID.Data)
 
 
 # 交易登出接口
@@ -285,5 +285,5 @@ def tquery():
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
     # w.start()
